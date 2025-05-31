@@ -1,5 +1,4 @@
 import { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
@@ -7,45 +6,39 @@ function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      // Tauri: 获取文件路径（仅在 Tauri 环境下有效）
+      // @ts-ignore
+      const path = (file as any).path;
+      if (!path) {
+        console.error('无法获取文件路径，确保在 Tauri 环境下运行。');
+        return;
+      }
+      // 你可以自定义 name/description/version
+      const projectId = await invoke<string>('create_project', {
+        name: file.name,
+        path,
+        description: '用户拖拽创建',
+        version: '1.0.0'
+      });
+      // 保存 projectId 或做后续处理
+      console.log('新建 Project ID:', projectId);
+    }
   }
-
+  
   return (
     <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
+      <div style={{
+        height: '100%',
+        width: '100%',
+      }} 
+      onDrop={handleDrop}/>
     </main>
   );
 }
 
 export default App;
+
