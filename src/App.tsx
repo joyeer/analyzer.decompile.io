@@ -28,13 +28,10 @@ function App() {
   }
   
   return (
-    <main className="container">
-      <div style={{
-        height: '100%',
-        width: '100%',
-      }} 
-      onDrop={handleDrop}/>
-    </main>
+    <div className="container" onDrop={handleDrop}>
+      <h1 className="text-4xl font-bold text-blue-600 text-center mt-10">Hello, Tailwind!</h1>
+
+    </div>
   );
 }
 
