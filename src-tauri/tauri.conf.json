@@ -14,11 +14,24 @@
       {
         "title": "analyzer",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "dragDropEnabled": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "capabilities": [
+        {
+          "identifier": "event-listen",
+          "windows": ["*"],
+          "permissions": ["core:event:allow-listen"]
+        },
+        {
+          "identifier": "draggable-window",
+          "windows": ["*"],
+          "permissions": ["core:window:allow-start-dragging"]
+        }
+      ]
     }
   },
   "bundle": {

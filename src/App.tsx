@@ -1,37 +1,43 @@
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useState } from "react";
 import "./App.css";
+import { DragDropEvent, getCurrentWebview } from "@tauri-apps/api/webview";
+import { Event } from "@tauri-apps/api/event";
 
 function App() {
-  const [projectId, setProjectId] = useState<string>("");
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    if (file) {
-      // Tauri: 获取文件路径（仅在 Tauri 环境下有效）
-      // @ts-ignore
-      const path = (file as any).path;
-      if (!path) {
-        console.error('无法获取文件路径，确保在 Tauri 环境下运行。');
-        return;
-      }
-      // 你可以自定义 name/description/version
-      const projectId = await invoke<string>('create_project', {
-        name: file.name,
-        path,
-        description: '用户拖拽创建',
-        version: '1.0.0'
-      });
-      // 保存 projectId 或做后续处理
-      console.log('新建 Project ID:', projectId);
-    }
-  }
   
-  return (
-    <div className="container" onDrop={handleDrop}>
-      <h1 className="text-4xl font-bold text-blue-600 text-center mt-10">Hello, Tailwind!</h1>
+  useEffect(() => {
+    // 定义异步函数
+    const setupDragDrop = async () => {
+      // 获取当前 Webview
+      let webview = getCurrentWebview();
+      const handler = (event: Event<DragDropEvent>) => {
+        // event.detail 里通常包含拖拽的文件信息
+        console.log("Native drag drop event:", event);
+        // 你可以在这里处理 event.detail
+      };
+      // 监听原生拖拽事件
+      const unlisten = await webview.onDragDropEvent(handler);
 
-    </div>
+      // 清理函数
+      return () => {
+        unlisten && unlisten();
+      };
+    };
+
+    let cleanup: (() => void) | undefined;
+
+    setupDragDrop().then((fn) => {
+      cleanup = fn;
+    });
+
+    return () => {
+      if (cleanup) cleanup();
+    };
+  }, []);
+
+
+  return (
+      <div>拖拽文件到窗口试试</div>
   );
 }
 
