@@ -11,7 +11,6 @@ function App() {
   const [projectId, setProjectId] = useState<string | null>(null);
   
   const handleOpenFile = useCallback( async (path: String) => {
-
     console.log("Opening project at path:", path);
     try {
       const projectId = await invoke<string>("create_project", { path });
@@ -26,11 +25,30 @@ function App() {
   useEffect(() => {
   
     const setupDragDrop = async () => {
-      // 获取当前 Webview
       let webview = getCurrentWebview();
       const handler = (event: Event<DragDropEvent>) => {
-        // event.detail 里通常包含拖拽的文件信息
-        console.log("Native drag drop event:", event );
+        
+        const {type } = event.payload as DragDropEvent;
+        switch (type) {
+          case "enter":
+            console.log("Drag enter event detected");
+            break;
+          case "over": 
+            console.log("Drag over event detected");
+            break;
+          case "leave":
+            console.log("Drag leave event detected");
+            break;
+          case "drop":
+            const dropPayload = event.payload as DragDropEvent & { paths?: string[] };
+            const paths = dropPayload.paths;
+            console.log("Drop event detected:", paths);
+            if (paths && paths.length > 0) {
+              console.log("Files dropped:", paths);
+              handleOpenFile(paths[0]);
+            }
+            break;
+          }
         
       };
       
