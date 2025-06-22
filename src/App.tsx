@@ -1,11 +1,28 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import { useCallback, useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { DragDropEvent, getCurrentWebview } from "@tauri-apps/api/webview";
 import { Event } from "@tauri-apps/api/event";
+import OpenProject from "./components/welcome";
+import "./App.css";
 
 
 function App() {
   
+  const [projectId, setProjectId] = useState<string | null>(null);
+  
+  const handleOpenFile = useCallback( async (path: String) => {
+
+    console.log("Opening project at path:", path);
+    try {
+      const projectId = await invoke<string>("create_project", { path });
+      setProjectId(projectId);
+    }
+    catch (error) {
+      console.error("Failed to open project:", error);
+      return;
+    }
+  }, []);
+
   useEffect(() => {
   
     const setupDragDrop = async () => {
@@ -37,7 +54,12 @@ function App() {
 
 
   return (
-      <div>拖拽文件到窗口试试</div>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center bg-gray-50"
+      onDragOver={e => e.preventDefault()}
+      >
+        <OpenProject onOpen={handleOpenFile}/>
+      </div>
   );
 }
 
