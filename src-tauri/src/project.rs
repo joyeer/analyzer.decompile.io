@@ -52,6 +52,11 @@ impl Project {
         return Project::new(project_type, name, path.to_string())
     }
 
+    pub fn query_type(project_id: &str) -> Option<ProjectType> {
+        let projects = PROJECTS.lock().unwrap();
+        projects.get(project_id).map(|p| p.project_type.clone())
+    }   
+
     pub fn get_name(&self) -> &str {
         &self.name
     }

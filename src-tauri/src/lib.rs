@@ -1,10 +1,17 @@
 pub mod project;
 
-// remember to call `.manage(MyState::default())`
 #[tauri::command]
 fn create_project(path: &str) -> String {
     let project_id = project::Project::create_project_from_path(path);
     project_id
+}
+
+#[tauri::command]
+fn project_get_type(project_id: &str) -> String {
+    match project::Project::query_type(project_id) {
+        Some(project_type) => format!("{:?}", project_type),
+        None => "Unknown".to_string(),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,7 +20,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![create_project])
+        .invoke_handler(tauri::generate_handler![create_project, project_get_type])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

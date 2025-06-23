@@ -9,12 +9,16 @@ import "./App.css";
 function App() {
   
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectType, setProjectType] = useState<string | null>(null);
   
   const handleOpenFile = useCallback( async (path: String) => {
     console.log("Opening project at path:", path);
     try {
-      const projectId = await invoke<string>("create_project", { path });
-      setProjectId(projectId);
+      const project_id = await invoke<string>("create_project", { path });
+      const project_type = await invoke<string>("project_get_type", { projectId: project_id});
+
+      setProjectId(project_id);
+      setProjectType(project_type);
     }
     catch (error) {
       console.error("Failed to open project:", error);
