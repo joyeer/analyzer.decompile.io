@@ -1,5 +1,6 @@
 use uuid;
 use std::collections::HashMap;
+use std::fs::File;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
 
@@ -16,17 +17,20 @@ pub struct Project {
     pub id: String,
     pub name: String,
     pub path: String,
+    pub file: Option<File>,
 }
 
 pub static PROJECTS: Lazy<Mutex<HashMap<String, Project>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 impl Project {
     pub fn new(project_type: ProjectType, name: String, path: String) -> String {
+        let file = File::open(&path).ok();
         let project = Project {
             project_type: project_type,
             id: uuid::Uuid::new_v4().to_string(),
             name,
-            path
+            path,
+            file
         };
         let id = project.id.clone();
         let mut projects = PROJECTS.lock().unwrap();
