@@ -5,7 +5,7 @@ interface HexProjectWorkspaceProps {
   projectId: string | null;
 }
 
-const PAGE_SIZE = 256;
+const PAGE_SIZE = 1024 * 8;
 
 export default function HexProjectWorkspace({ projectId }: HexProjectWorkspaceProps) {
   const [page, setPage] = useState(0);
@@ -83,28 +83,23 @@ export default function HexProjectWorkspace({ projectId }: HexProjectWorkspacePr
         lines.push(
           <div key={offset + i} className="font-mono text-xs flex">
             <span className="w-24 text-gray-400">{(pageIdx * PAGE_SIZE + i).toString(16).padStart(8, "0")}</span>
-            <span className="w-80">{hex}</span>
+            <span className="w-90">{hex}</span>
             <span className="ml-4">{ascii}</span>
           </div>
         );
       }
       offset += data.length;
     });
-    return <div className="bg-black text-green-400 p-4 rounded">{lines}</div>;
+    return <div className="bg-white">{lines}</div>;
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-8">
-      <h2 className="text-lg font-bold mb-4">Hex 文件浏览</h2>
+    <div className="w-full h-screen bg-white">
       <div
         ref={containerRef}
-        className="overflow-y-auto"
-        style={{ maxHeight: 480, minHeight: 320 }}
+        className="overflow-y-auto h-full"
       >
         {renderHex()}
-        {page < totalPages - 1 && (
-          <div className="text-center text-gray-400 py-2">滚动加载更多...</div>
-        )}
       </div>
     </div>
   );
