@@ -15,6 +15,7 @@ pub enum ProjectType {
     Java,
     Android,
 }
+
 pub enum ProjectData {
     Hex(HexProjectData),
     Java(JavaProjectData),
@@ -26,9 +27,7 @@ pub struct Project {
     pub id: String,
     pub name: String,
     pub path: String,
-    pub file: Option<File>,
     pub data: ProjectData,
-
 }
 
 pub static PROJECTS: Lazy<Mutex<HashMap<String, Project>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -41,8 +40,9 @@ impl Project {
             id: uuid::Uuid::new_v4().to_string(),
             name,
             path,
-            file,
-            data: ProjectData::Hex(HexProjectData {})
+            data: ProjectData::Hex(HexProjectData {
+                file: file
+            })
         };
         let id = project.id.clone();
         let mut projects = PROJECTS.lock().unwrap();
@@ -73,11 +73,44 @@ impl Project {
         projects.get(project_id).map(|p| p.project_type.clone())
     }   
 
-    pub fn get_name(&self) -> &str {
-        &self.name
+    /// 根据 project_id 获取 project 对象的不可变引用
+    pub fn get_project(project_id: &str) -> Result<std::sync::MutexGuard<'static, HashMap<String, Project>>, String> {
+        let projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
+        if projects.contains_key(project_id) {
+            Ok(projects)
+        } else {
+            Err("Project not found".to_string())
+        }
     }
 
-    pub fn get_path(&self) -> &str {
-        &self.path
+    /// 根据 project_id 获取 project 对象的可变引用
+    pub fn get_project_mut(project_id: &str) -> Result<std::sync::MutexGuard<'static, HashMap<String, Project>>, String> {
+        let projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
+        if projects.contains_key(project_id) {
+            Ok(projects)
+        } else {
+            Err("Project not found".to_string())
+        }
     }
+
+    /// 执行需要访问项目的操作（不可变）
+    pub fn with_project<T, F>(project_id: &str, f: F) -> Result<T, String>
+    where
+        F: FnOnce(&Project) -> Result<T, String>,
+    {
+        let projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
+        let project = projects.get(project_id).ok_or("Project not found")?;
+        f(project)
+    }
+
+    /// 执行需要访问项目的操作（可变）
+    pub fn with_project_mut<T, F>(project_id: &str, f: F) -> Result<T, String>
+    where
+        F: FnOnce(&mut Project) -> Result<T, String>,
+    {
+        let mut projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
+        let project = projects.get_mut(project_id).ok_or("Project not found")?;
+        f(project)
+    }
+
 }

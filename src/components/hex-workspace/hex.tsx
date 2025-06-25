@@ -17,12 +17,18 @@ export default function HexProjectWorkspace({ projectId }: HexProjectWorkspacePr
   // 加载总页数和第一页
   useEffect(() => {
     if (!projectId) return;
-    invoke<number>("hex_project_total_pages", { project_id: projectId, page_size: PAGE_SIZE })
-      .then(setTotalPages)
-      .catch(() => setTotalPages(1));
-    setHexData([]);
-    setPage(0);
-    loadPage(0, true);
+    // 获取文件尺寸
+    invoke<number>("hex_project_get_file_size", { projectId: projectId })
+      .then(size => console.log("文件大小:", size));
+      
+    // 获取总页数
+    invoke<number>("hex_project_get_total_pages", { 
+      projectId: projectId, 
+      pageSize: PAGE_SIZE 
+  }).then(setTotalPages);
+  
+  // 加载第一页
+  loadPage(0, true);
   }, [projectId]);
 
   // 滚动到底部时加载下一页
@@ -45,18 +51,20 @@ export default function HexProjectWorkspace({ projectId }: HexProjectWorkspacePr
 
   // 加载指定页
   const loadPage = (pageNum: number, replace = false) => {
-    if (!projectId || loadingRef.current) return;
-    loadingRef.current = true;
-    invoke<Uint8Array>("hex_project_read_page", {
-      project_id: projectId,
-      page: pageNum,
-      page_size: PAGE_SIZE,
-    }).then((data) => {
-      setHexData((prev) => (replace ? [data] : [...prev, data]));
-      setPage(pageNum);
-      loadingRef.current = false;
-    });
-  };
+  if (!projectId || loadingRef.current) return;
+  loadingRef.current = true;
+  
+  invoke<number[]>("hex_project_read_page", {
+    projectId: projectId,
+    page: pageNum,
+    pageSize: PAGE_SIZE,
+  }).then((data) => {
+    const uint8Data = new Uint8Array(data);
+    setHexData((prev) => (replace ? [uint8Data] : [...prev, uint8Data]));
+    setPage(pageNum);
+    loadingRef.current = false;
+  });
+};
 
   // 渲染 hex 视图
   const renderHex = () => {
