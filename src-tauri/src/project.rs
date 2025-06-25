@@ -4,12 +4,21 @@ use std::fs::File;
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
 
+use crate::hex::HexProjectData;
+use crate::java::JavaProjectData;
+use crate::android::AndroidProjectData;
+
 // 项目文件需要支持类型，比如Hex文件，Java反编译项目，Android反编译项目
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProjectType {
     Hex,
     Java,
     Android,
+}
+pub enum ProjectData {
+    Hex(HexProjectData),
+    Java(JavaProjectData),
+    Android(AndroidProjectData),
 }
 
 pub struct Project {
@@ -18,6 +27,8 @@ pub struct Project {
     pub name: String,
     pub path: String,
     pub file: Option<File>,
+    pub data: ProjectData,
+
 }
 
 pub static PROJECTS: Lazy<Mutex<HashMap<String, Project>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -30,7 +41,8 @@ impl Project {
             id: uuid::Uuid::new_v4().to_string(),
             name,
             path,
-            file
+            file,
+            data: ProjectData::Hex(HexProjectData {})
         };
         let id = project.id.clone();
         let mut projects = PROJECTS.lock().unwrap();

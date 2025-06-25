@@ -1,4 +1,7 @@
 pub mod project;
+pub mod hex;
+pub mod java;
+pub mod android;
 
 #[tauri::command]
 fn create_project(path: &str) -> String {
