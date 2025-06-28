@@ -34,15 +34,36 @@ pub static PROJECTS: Lazy<Mutex<HashMap<String, Project>>> = Lazy::new(|| Mutex:
 
 impl Project {
     pub fn new(project_type: ProjectType, name: String, path: String) -> String {
-        let file = File::open(&path).ok();
+        let data = match project_type {
+            ProjectType::Hex => {
+                let file = File::open(&path).ok();
+                ProjectData::Hex(HexProjectData {
+                    file
+                })
+            },
+            ProjectType::Java => {
+                // 创建 JAR 读取器并扫描文件
+                let jar_reader = crate::java_analyzer::jar::JarReader::new(&path);
+                let class_files = jar_reader.list_entries().unwrap_or_default();
+                ProjectData::Java(JavaProjectData {
+                    jar_reader,
+                    class_files,
+                })
+            },
+            ProjectType::Android => {
+                ProjectData::Android(AndroidProjectData {
+                    apk_path: path.clone(),
+                    // 其他 Android 专属字段
+                })
+            }
+        };
+
         let project = Project {
-            project_type: project_type,
+            project_type,
             id: uuid::Uuid::new_v4().to_string(),
             name,
             path,
-            data: ProjectData::Hex(HexProjectData {
-                file: file
-            })
+            data,
         };
         let id = project.id.clone();
         let mut projects = PROJECTS.lock().unwrap();
@@ -54,7 +75,7 @@ impl Project {
     pub fn create_project_from_path(path: &str) -> String {
         let project_type = if path.ends_with(".apk") {
             ProjectType::Android
-        } else if path.ends_with(".java") {
+        } else if path.ends_with(".jar") || path.ends_with(".class") {
             ProjectType::Java
         } else {
             ProjectType::Hex // 默认类型为 Hex
@@ -72,26 +93,6 @@ impl Project {
         let projects = PROJECTS.lock().unwrap();
         projects.get(project_id).map(|p| p.project_type.clone())
     }   
-
-    /// 根据 project_id 获取 project 对象的不可变引用
-    pub fn get_project(project_id: &str) -> Result<std::sync::MutexGuard<'static, HashMap<String, Project>>, String> {
-        let projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
-        if projects.contains_key(project_id) {
-            Ok(projects)
-        } else {
-            Err("Project not found".to_string())
-        }
-    }
-
-    /// 根据 project_id 获取 project 对象的可变引用
-    pub fn get_project_mut(project_id: &str) -> Result<std::sync::MutexGuard<'static, HashMap<String, Project>>, String> {
-        let projects = PROJECTS.lock().map_err(|_| "Failed to lock projects")?;
-        if projects.contains_key(project_id) {
-            Ok(projects)
-        } else {
-            Err("Project not found".to_string())
-        }
-    }
 
     /// 执行需要访问项目的操作（不可变）
     pub fn with_project<T, F>(project_id: &str, f: F) -> Result<T, String>

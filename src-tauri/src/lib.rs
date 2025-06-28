@@ -17,7 +17,8 @@ pub fn run() {
             project::project_get_type,
             hex::hex_project_get_file_size,
             hex::hex_project_get_total_pages,
-            hex::hex_project_read_page])
+            hex::hex_project_read_page,
+            java::java_project_list_files])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
