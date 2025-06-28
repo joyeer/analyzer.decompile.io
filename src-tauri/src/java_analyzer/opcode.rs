@@ -1,4 +1,3 @@
-
 pub const OP_NOP: u8 = 0x00;
 pub const OP_ACONST_NULL: u8 = 0x01;
 pub const OP_ICONST_M1: u8 = 0x02;

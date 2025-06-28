@@ -114,3 +114,17 @@ impl Project {
     }
 
 }
+
+#[tauri::command]
+pub fn create_project(path: &str) -> String {
+    let project_id = Project::create_project_from_path(path);
+    project_id
+}
+
+#[tauri::command]
+pub fn project_get_type(project_id: &str) -> String {
+    match Project::query_type(project_id) {
+        Some(project_type) => format!("{:?}", project_type),
+        None => "Unknown".to_string(),
+    }
+}

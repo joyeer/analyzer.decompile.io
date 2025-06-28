@@ -12,4 +12,4 @@ mod annotions;
 mod field;
 mod controlflow;
 mod controlflowbuilder;
-mod jar;
+pub(crate) mod jar;

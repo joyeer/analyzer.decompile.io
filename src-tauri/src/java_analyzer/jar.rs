@@ -1,11 +1,12 @@
 use std::fs::File;
 use std::io::Read;
 use zip::ZipArchive;
+
 pub struct JarReader {
     pub path: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct JarEntry {
     pub name: String,
     pub size: u64,
