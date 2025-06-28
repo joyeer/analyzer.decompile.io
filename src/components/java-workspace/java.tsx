@@ -63,18 +63,20 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
     return tree;
   };
 
-  const renderTree = (tree: any, path = ""): React.ReactNode => {
+  const renderTree = (tree: any, path = "", depth = 0): React.ReactNode => {
     return Object.keys(tree).map(key => {
       const fullPath = path ? `${path}/${key}` : key;
       const isFile = tree[key] === null;
+      const indent = depth * 16; // 每层缩进 16px
       
       if (isFile) {
         return (
           <div
             key={fullPath}
-            className={`pl-4 py-1 cursor-pointer hover:bg-blue-100 text-sm font-mono ${
+            className={`py-1 cursor-pointer hover:bg-blue-100 text-sm font-mono ${
               selectedFile === fullPath ? 'bg-blue-200' : ''
             }`}
+            style={{ paddingLeft: `${indent + 16}px` }}
             onClick={() => handleFileClick(fullPath)}
           >
             📄 {key}
@@ -82,14 +84,17 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
         );
       } else {
         return (
-          <details key={fullPath} open>
-            <summary className="pl-2 py-1 cursor-pointer hover:bg-gray-100 text-sm font-semibold">
-              📁 {key}
-            </summary>
-            <div className="pl-4">
-              {renderTree(tree[key], fullPath)}
-            </div>
-          </details>
+          <div key={fullPath}>
+            <details open>
+              <summary 
+                className="py-1 cursor-pointer hover:bg-gray-100 text-sm font-semibold list-none"
+                style={{ paddingLeft: `${indent + 8}px` }}
+              >
+                📁 {key}
+              </summary>
+            </details>
+            {renderTree(tree[key], fullPath, depth + 1)}
+          </div>
         );
       }
     });
@@ -101,7 +106,6 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
     <div className="w-full h-screen bg-white flex">
       {/* 左侧：目录结构 */}
       <div className="w-1/3 border-r border-gray-300 overflow-y-auto p-2">
-        <h3 className="text-md font-bold mb-2 text-gray-700">JAR 目录结构</h3>
         <div className="space-y-1">
           {renderTree(directoryTree)}
         </div>
