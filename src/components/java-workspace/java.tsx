@@ -10,6 +10,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set()); // 新增：管理展开的目录
 
   useEffect(() => {
     if (!projectId) return;
@@ -42,6 +43,19 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
     }
   };
 
+  // 切换目录展开/收起状态
+  const toggleDirectory = (dirPath: string) => {
+    setExpandedDirs(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dirPath)) {
+        newSet.delete(dirPath);
+      } else {
+        newSet.add(dirPath);
+      }
+      return newSet;
+    });
+  };
+
   // 构建目录树结构
   const buildDirectoryTree = (files: string[]) => {
     const tree: { [key: string]: any } = {};
@@ -67,7 +81,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
     return Object.keys(tree).map(key => {
       const fullPath = path ? `${path}/${key}` : key;
       const isFile = tree[key] === null;
-      const indent = depth * 16; // 每层缩进 16px
+      const isExpanded = expandedDirs.has(fullPath);
       
       if (isFile) {
         return (
@@ -76,7 +90,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
             className={`py-1 cursor-pointer hover:bg-blue-100 text-sm font-mono ${
               selectedFile === fullPath ? 'bg-blue-200' : ''
             }`}
-            style={{ paddingLeft: `${indent + 16}px` }}
+            style={{ paddingLeft: `${depth * 16 + 16}px` }}
             onClick={() => handleFileClick(fullPath)}
           >
             📄 {key}
@@ -85,15 +99,21 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
       } else {
         return (
           <div key={fullPath}>
-            <details open>
-              <summary 
-                className="py-1 cursor-pointer hover:bg-gray-100 text-sm font-semibold list-none"
-                style={{ paddingLeft: `${indent + 8}px` }}
-              >
-                📁 {key}
-              </summary>
-            </details>
-            {renderTree(tree[key], fullPath, depth + 1)}
+            <div
+              className="py-1 cursor-pointer hover:bg-gray-100 text-sm font-semibold flex items-center"
+              style={{ paddingLeft: `${depth * 16 + 8}px` }}
+              onClick={() => toggleDirectory(fullPath)}
+            >
+              <span className="mr-1">
+                {isExpanded ? '📂' : '📁'}
+              </span>
+              {key}
+            </div>
+            {isExpanded && (
+              <div>
+                {renderTree(tree[key], fullPath, depth + 1)}
+              </div>
+            )}
           </div>
         );
       }
