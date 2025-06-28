@@ -8,9 +8,13 @@ pub struct JavaProjectData {
 }
 
 impl JavaProjectData {
-    pub fn new(jar_path: String, class_files: Vec<JarEntry>) -> Self {
+    pub fn new(jar_path: String) -> Self {
+        // 创建 JAR 读取器并扫描文件
+        let jar_reader = crate::java_analyzer::jar::JarReader::new(&jar_path);
+        let class_files = jar_reader.list_entries().unwrap_or_default();
+
         JavaProjectData {
-            jar_reader: JarReader::new(&jar_path),
+            jar_reader,
             class_files,
         }
     }

@@ -42,13 +42,7 @@ impl Project {
                 })
             },
             ProjectType::Java => {
-                // 创建 JAR 读取器并扫描文件
-                let jar_reader = crate::java_analyzer::jar::JarReader::new(&path);
-                let class_files = jar_reader.list_entries().unwrap_or_default();
-                ProjectData::Java(JavaProjectData {
-                    jar_reader,
-                    class_files,
-                })
+                ProjectData::Java(JavaProjectData::new(path.clone()))
             },
             ProjectType::Android => {
                 ProjectData::Android(AndroidProjectData {
