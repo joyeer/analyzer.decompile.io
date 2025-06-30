@@ -1,5 +1,5 @@
 mod classfile;
-mod disassembler;
+pub(crate) mod disassembler;
 mod decompiler;
 
 mod error;
@@ -13,4 +13,3 @@ mod field;
 mod controlflow;
 mod controlflowbuilder;
 pub(crate) mod jar;
-pub(crate) mod asm;

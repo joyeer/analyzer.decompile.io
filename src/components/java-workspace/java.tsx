@@ -30,7 +30,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
     
     try {
       // 调用 Rust 端读取文件内容的命令
-      const content = await invoke<string>("java_read_file_content", { 
+      const content = await invoke<string>("java_project_read_file_content", { 
         projectId, 
         fileName 
       });

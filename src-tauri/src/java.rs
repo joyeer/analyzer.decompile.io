@@ -1,7 +1,7 @@
 // Removed unused import of File, since File does not implement Clone, PartialEq, or Eq.
 
 use crate::{java_analyzer::jar::{JarEntry, JarReader}, project::Project}; // Add this import if ZipEntry comes from the 'zip' crate
-use crate::java_analyzer::asm::disassemble_classfile;
+use crate::java_analyzer::disassembler::disassemble_classfile;
 
 pub struct JavaProjectData {
     pub jar_reader:JarReader,
