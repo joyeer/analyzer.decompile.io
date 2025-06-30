@@ -13,3 +13,4 @@ mod field;
 mod controlflow;
 mod controlflowbuilder;
 pub(crate) mod jar;
+pub(crate) mod asm;

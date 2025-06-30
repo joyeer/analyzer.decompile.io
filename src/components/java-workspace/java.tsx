@@ -87,8 +87,8 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
         return (
           <div
             key={fullPath}
-            className={`py-1 cursor-pointer hover:bg-blue-100 text-sm font-mono ${
-              selectedFile === fullPath ? 'bg-blue-200' : ''
+            className={`py-1 cursor-pointer hover:bg-gray-100 text-sm font-mono ${
+              selectedFile === fullPath ? 'bg-blue-100' : ''
             }`}
             style={{ paddingLeft: `${depth * 16 + 16}px` }}
             onClick={() => handleFileClick(fullPath)}
@@ -100,7 +100,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
         return (
           <div key={fullPath}>
             <div
-              className="py-1 cursor-pointer hover:bg-gray-100 text-sm font-semibold flex items-center"
+              className="py-1 cursor-pointer hover:bg-gray-100 text-sm flex items-center"
               style={{ paddingLeft: `${depth * 16 + 8}px` }}
               onClick={() => toggleDirectory(fullPath)}
             >
