@@ -59,6 +59,7 @@ pub enum Attribute {
     Signature(Signature_attribute),
     Exceptions(Exceptions_attribute),
     InnerClasses(InnerClasses_attribute),
+    EnclosingMethod(EnclosingMethod_attribute),
 }
 
 #[derive(Debug)]
@@ -75,6 +76,16 @@ pub fn read_constant_value_attribute(buffer: &mut Buffer) -> Result<ConstantValu
 pub struct Exceptions_attribute {
     pub number_of_exceptions: u16,
     pub exception_index_table: Vec<u16>,
+}
+
+fn read_exceptions_attribute(buffer: &mut Buffer) -> Result<Exceptions_attribute> {
+    let number_of_exceptions = buffer.read_u16()?;
+    let mut exception_index_table = Vec::new();
+    for _ in 0..number_of_exceptions {
+        let exception_index = buffer.read_u16()?;
+        exception_index_table.push(exception_index);
+    }
+    Ok(Exceptions_attribute { number_of_exceptions, exception_index_table })
 }
 
 #[derive(Debug)]
@@ -115,6 +126,12 @@ pub struct EnclosingMethod_attribute {
     pub method_index: u16,
 }
 
+fn read_enclosing_method_attribute(buffer: &mut Buffer) -> Result<EnclosingMethod_attribute> {
+    let class_index = buffer.read_u16()?;
+    let method_index = buffer.read_u16()?;
+    Ok(EnclosingMethod_attribute { class_index, method_index })
+}
+
 #[derive(Debug)]
 pub struct Signature_attribute {
     pub signature_index: u16,
@@ -145,8 +162,6 @@ pub struct LocalVariableTable_attribute {
     pub local_variable_table_length: u16,
     pub local_variable_table: Vec<LocalVariableTableEntry>,
 }
-
-
 
 #[derive(Debug)]
 pub struct LocalVariableTableEntry {
@@ -229,6 +244,16 @@ pub struct Synthetic_attribute;
 pub struct RuntimeVisibleAnnotations_attribute {
     pub num_annotations: u16,
     pub annotations: Vec<Annotation>,
+}
+
+fn read_runtime_visible_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeVisibleAnnotations_attribute> {
+    let num_annotations = buffer.read_u16()?;
+    let mut annotations = Vec::new();
+    for _ in 0..num_annotations {
+        let annotation = Annotation::read(buffer)?;
+        annotations.push(annotation);
+    }
+    Ok(RuntimeVisibleAnnotations_attribute { num_annotations, annotations })
 }
 
 #[derive(Debug)]
@@ -595,6 +620,18 @@ pub(crate) fn read_raw_attribute(buffer:&mut Buffer, classfile: &ClassFile) -> R
         AttributeNames::INNER_CLASSES => {
             let inner_classes_attribute = read_innter_class_attribute(buffer)?;
             return Ok(Attribute::InnerClasses(inner_classes_attribute));
+        }
+        AttributeNames::EXCEPTIONS => {
+            let exceptions_attribute = read_exceptions_attribute(buffer)?;
+            return Ok(Attribute::Exceptions(exceptions_attribute));
+        }
+        AttributeNames::RUNTIME_VISIBLE_ANNOTATIONS => {
+            let runtime_visible_annotations = read_runtime_visible_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeVisibleAnnotations(runtime_visible_annotations));
+        }
+        AttributeNames::ENCLOSING_METHOD => {
+            let enclosing_method_attribute = read_enclosing_method_attribute(buffer)?;
+            return Ok(Attribute::EnclosingMethod(enclosing_method_attribute));
         }
         _ => {
             // Handle other attributes or return an error
