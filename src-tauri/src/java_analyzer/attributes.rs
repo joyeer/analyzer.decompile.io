@@ -53,11 +53,22 @@ pub enum Attribute {
     AnnotationDefault(AnnotationDefault_attribute),
     BootstrapMethods(BootstrapMethods_attribute),
     SourceFile(SourceFile_attribute),
+    LocalVariableTable(LocalVariableTable_attribute),
+    LocalVariableTypeTable(LocalVariableTypeTable_attribute),
+    Deprecated(Deprecated_attribute),
+    Signature(Signature_attribute),
+    Exceptions(Exceptions_attribute),
+    InnerClasses(InnerClasses_attribute),
 }
 
 #[derive(Debug)]
 pub struct ConstantValue_attribute {
     pub constant_value_index: u16,
+}
+
+pub fn read_constant_value_attribute(buffer: &mut Buffer) -> Result<ConstantValue_attribute> {
+    let constant_value_index = buffer.read_u16()?;
+    Ok(ConstantValue_attribute { constant_value_index })
 }
 
 #[derive(Debug)]
@@ -80,6 +91,24 @@ pub struct InnerClass {
     pub inner_class_access_flags: u16,
 }
 
+fn read_innter_class_attribute(buffer: &mut Buffer) -> Result<InnerClasses_attribute> {
+    let number_of_classes = buffer.read_u16()?;
+    let mut classes = Vec::new();
+    for _ in 0..number_of_classes {
+        let inner_class_info_index = buffer.read_u16()?;
+        let outer_class_info_index = buffer.read_u16()?;
+        let inner_name_index = buffer.read_u16()?;
+        let inner_class_access_flags = buffer.read_u16()?;
+        classes.push(InnerClass {
+            inner_class_info_index,
+            outer_class_info_index,
+            inner_name_index,
+            inner_class_access_flags,
+        });
+    }
+    Ok(InnerClasses_attribute { number_of_classes, classes })
+}
+
 #[derive(Debug)]
 pub struct EnclosingMethod_attribute {
     pub class_index: u16,
@@ -89,6 +118,11 @@ pub struct EnclosingMethod_attribute {
 #[derive(Debug)]
 pub struct Signature_attribute {
     pub signature_index: u16,
+}
+
+fn read_signature_attribute(buffer: &mut Buffer) -> Result<Signature_attribute> {
+    let signature_index = buffer.read_u16()?;
+    Ok(Signature_attribute { signature_index })
 }
 
 #[derive(Debug)]
@@ -112,6 +146,8 @@ pub struct LocalVariableTable_attribute {
     pub local_variable_table: Vec<LocalVariableTableEntry>,
 }
 
+
+
 #[derive(Debug)]
 pub struct LocalVariableTableEntry {
     pub start_pc: u16,
@@ -119,6 +155,29 @@ pub struct LocalVariableTableEntry {
     pub name_index: u16,
     pub descriptor_index: u16,
     pub index: u16,
+}
+
+fn read_local_variable_table(buffer: &mut Buffer) -> Result<LocalVariableTable_attribute> {
+    let local_variable_table_length = buffer.read_u16()?;
+    let mut local_variable_table = Vec::new();
+    for _ in 0..local_variable_table_length {
+        let start_pc = buffer.read_u16()?;
+        let length = buffer.read_u16()?;
+        let name_index = buffer.read_u16()?;
+        let descriptor_index = buffer.read_u16()?;
+        let index = buffer.read_u16()?;
+        local_variable_table.push(LocalVariableTableEntry {
+            start_pc,
+            length,
+            name_index,
+            descriptor_index,
+            index,
+        });
+    }
+    Ok(LocalVariableTable_attribute {
+        local_variable_table_length,
+        local_variable_table,
+    })
 }
 
 #[derive(Debug)]
@@ -135,6 +194,30 @@ pub struct LocalVariableTypeTableEntry {
     pub signature_index: u16,
     pub index: u16,
 }
+
+fn read_local_variable_type_table(buffer: &mut Buffer) -> Result<LocalVariableTypeTable_attribute> {
+    let local_variable_type_table_length = buffer.read_u16()?;
+    let mut local_variable_type_table = Vec::new();
+    for _ in 0..local_variable_type_table_length {
+        let start_pc = buffer.read_u16()?;
+        let length = buffer.read_u16()?;
+        let name_index = buffer.read_u16()?;
+        let signature_index = buffer.read_u16()?;
+        let index = buffer.read_u16()?;
+        local_variable_type_table.push(LocalVariableTypeTableEntry {
+            start_pc,
+            length,
+            name_index,
+            signature_index,
+            index,
+        });
+    }
+    Ok(LocalVariableTypeTable_attribute {
+        local_variable_type_table_length,
+        local_variable_type_table,
+    })
+}
+
 
 #[derive(Debug)]
 pub struct Deprecated_attribute; 
@@ -489,6 +572,29 @@ pub(crate) fn read_raw_attribute(buffer:&mut Buffer, classfile: &ClassFile) -> R
         AttributeNames::SOURCE_FILE => {
             let source_file_attribute = read_sourcefile_attribute(buffer)?;
             return Ok(Attribute::SourceFile(source_file_attribute));
+        }
+        AttributeNames::CONSTANT_VALUE => {
+            let constant_value_attribute = read_constant_value_attribute(buffer)?;
+            return Ok(Attribute::ConstantValue(constant_value_attribute));
+        }
+        AttributeNames::LOCAL_VARIABLE_TABLE => {
+            let local_variable_table = read_local_variable_table(buffer)?;
+            return Ok(Attribute::LocalVariableTable(local_variable_table));
+        }
+        AttributeNames::DEPRECATED => {
+            return Ok(Attribute::Deprecated(Deprecated_attribute));
+        }
+        AttributeNames::SIGNATURE => {
+            let signature_attribute = read_signature_attribute(buffer)?;
+            return Ok(Attribute::Signature(signature_attribute));
+        }
+        AttributeNames::LOCAL_VARIABLE_TYPE_TABLE => {
+            let local_variable_type_table = read_local_variable_type_table(buffer)?;
+            return Ok(Attribute::LocalVariableTypeTable(local_variable_type_table));
+        }
+        AttributeNames::INNER_CLASSES => {
+            let inner_classes_attribute = read_innter_class_attribute(buffer)?;
+            return Ok(Attribute::InnerClasses(inner_classes_attribute));
         }
         _ => {
             // Handle other attributes or return an error
