@@ -15,7 +15,8 @@
     "@tauri-apps/plugin-fs": "^2.3.0",
     "@tauri-apps/plugin-opener": "^2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-split-pane": "^0.1.92"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.8",

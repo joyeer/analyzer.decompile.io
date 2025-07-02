@@ -60,6 +60,7 @@ pub enum Attribute {
     Exceptions(Exceptions_attribute),
     InnerClasses(InnerClasses_attribute),
     EnclosingMethod(EnclosingMethod_attribute),
+    SYNTHETIC(Synthetic_attribute),
 }
 
 #[derive(Debug)]
@@ -632,6 +633,9 @@ pub(crate) fn read_raw_attribute(buffer:&mut Buffer, classfile: &ClassFile) -> R
         AttributeNames::ENCLOSING_METHOD => {
             let enclosing_method_attribute = read_enclosing_method_attribute(buffer)?;
             return Ok(Attribute::EnclosingMethod(enclosing_method_attribute));
+        }
+        AttributeNames::SYNTHETIC => {
+            return Ok(Attribute::SYNTHETIC(Synthetic_attribute));
         }
         _ => {
             // Handle other attributes or return an error
