@@ -135,7 +135,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
         return (
           <div
             key={fullPath}
-            className={`py-1 px-1 cursor-pointer hover:bg-gray-100 text-sm font-mono flex items-center rounded transition-colors ${
+            className={`py-1 px-1 cursor-pointer hover:bg-gray-100 text-sm flex items-center rounded transition-colors ${
               selectedFile === fullPath ? 'bg-blue-100 text-blue-800' : 'text-gray-700'
             }`}
             style={{ paddingLeft: `${depth * 16 + 16}px` }}
@@ -188,7 +188,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
             <div className="pb-2 mb-2 border-b border-gray-200">
               <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center">
                 <Package className="mr-1" size={14} />
-                Explorer
+                Project
               </h4>
             </div>
             <div className="space-y-0.5">
