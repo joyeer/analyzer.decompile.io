@@ -231,7 +231,7 @@ export default function JavaProjectWorkspace({ projectId }: JavaProjectWorkspace
                   </div>
                 </div>
               ) : selectedFile ? (
-                <pre className="text-xs font-mono bg-gray-100 p-4 rounded overflow-x-auto whitespace-pre-wrap">
+                <pre className="text-xs font-mono rounded overflow-x-auto whitespace-pre-wrap">
                   {fileContent}
                 </pre>
               ) : (
