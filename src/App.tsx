@@ -5,7 +5,8 @@ import { Event } from "@tauri-apps/api/event";
 import OpenProject from "./components/welcome";
 import "./App.css";
 import HexProjectWorkspace from "./components/hex-workspace/hex";
-import JavaProjectWorkspace from "./components/java-workspace/java"; 
+import JavaProjectWorkspace from "./components/java-workspace/java";
+import AndroidProjectWorkspace from "./components/android-workspace/android"; 
 
 
 function App() {
@@ -83,6 +84,7 @@ function App() {
       {!projectType && <OpenProject onOpen={handleOpenFile} />}
       {projectType === "Hex" && <HexProjectWorkspace projectId={projectId} />}
       {projectType === "Java" && <JavaProjectWorkspace projectId={projectId} />}
+      {projectType === "Android" && <AndroidProjectWorkspace projectId={projectId} />}
       {/* 你可以根据需要添加更多类型 */}
     </div>
   );

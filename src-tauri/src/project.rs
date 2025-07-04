@@ -47,7 +47,9 @@ impl Project {
             ProjectType::Android => {
                 ProjectData::Android(AndroidProjectData {
                     apk_path: path.clone(),
-                    // 其他 Android 专属字段
+                    dex_files: Vec::new(),
+                    manifest: None,
+                    resource_table: None,
                 })
             }
         };
@@ -122,4 +124,11 @@ pub fn project_get_type(project_id: &str) -> String {
         Some(project_type) => format!("{:?}", project_type),
         None => "Unknown".to_string(),
     }
+}
+
+#[tauri::command]
+pub fn project_get_path(project_id: &str) -> Result<String, String> {
+    Project::with_project(project_id, |project| {
+        Ok(project.path.clone())
+    })
 }
