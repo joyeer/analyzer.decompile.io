@@ -254,9 +254,27 @@ impl ClassFileDisassembler {
             OP_DCONST_1 => "dconst_1".to_string(),
             OP_BIPUSH => format!("bipush {}", instruction.value),
             OP_SIPUSH => format!("sipush {}", instruction.value),
-            OP_LDC => format!("ldc #{}", instruction.value),
-            OP_LDC_W => format!("ldc_w #{}", instruction.value),
-            OP_LDC2_W => format!("ldc2_w #{}", instruction.value),
+            OP_LDC => {
+                if let Some(constant) = self.get_constant_info(instruction.value as u16) {
+                    format!("ldc #{} // {}", instruction.value, constant)
+                } else {
+                    format!("ldc #{}", instruction.value)
+                }
+            },
+            OP_LDC_W => {
+                if let Some(constant) = self.get_constant_info(instruction.value as u16) {
+                    format!("ldc_w #{} // {}", instruction.value, constant)
+                } else {
+                    format!("ldc_w #{}", instruction.value)
+                }
+            },
+            OP_LDC2_W => {
+                if let Some(constant) = self.get_constant_info(instruction.value as u16) {
+                    format!("ldc2_w #{} // {}", instruction.value, constant)
+                } else {
+                    format!("ldc2_w #{}", instruction.value)
+                }
+            },
             OP_ILOAD => format!("iload {}", instruction.value),
             OP_LLOAD => format!("lload {}", instruction.value),
             OP_FLOAD => format!("fload {}", instruction.value),
@@ -389,22 +407,22 @@ impl ClassFileDisassembler {
             OP_FCMPG => "fcmpg".to_string(),
             OP_DCMPL => "dcmpl".to_string(),
             OP_DCMPG => "dcmpg".to_string(),
-            OP_IFEQ => format!("ifeq {}", instruction.value),
-            OP_IFNE => format!("ifne {}", instruction.value),
-            OP_IFLT => format!("iflt {}", instruction.value),
-            OP_IFGE => format!("ifge {}", instruction.value),
-            OP_IFGT => format!("ifgt {}", instruction.value),
-            OP_IFLE => format!("ifle {}", instruction.value),
-            OP_IF_ICMPEQ => format!("if_icmpeq {}", instruction.value),
-            OP_IF_ICMPNE => format!("if_icmpne {}", instruction.value),
-            OP_IF_ICMPLT => format!("if_icmplt {}", instruction.value),
-            OP_IF_ICMPGE => format!("if_icmpge {}", instruction.value),
-            OP_IF_ICMPGT => format!("if_icmpgt {}", instruction.value),
-            OP_IF_ICMPLE => format!("if_icmple {}", instruction.value),
-            OP_IF_ACMPEQ => format!("if_acmpeq {}", instruction.value),
-            OP_IF_ACMPNE => format!("if_acmpne {}", instruction.value),
-            OP_GOTO => format!("goto {}", instruction.value),
-            OP_JSR => format!("jsr {}", instruction.value),
+            OP_IFEQ => format!("ifeq {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFNE => format!("ifne {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFLT => format!("iflt {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFGE => format!("ifge {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFGT => format!("ifgt {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFLE => format!("ifle {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPEQ => format!("if_icmpeq {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPNE => format!("if_icmpne {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPLT => format!("if_icmplt {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPGE => format!("if_icmpge {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPGT => format!("if_icmpgt {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ICMPLE => format!("if_icmple {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ACMPEQ => format!("if_acmpeq {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IF_ACMPNE => format!("if_acmpne {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_GOTO => format!("goto {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_JSR => format!("jsr {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
             OP_RET => format!("ret {}", instruction.value),
             OP_IRETURN => "ireturn".to_string(),
             OP_LRETURN => "lreturn".to_string(),
@@ -517,10 +535,10 @@ impl ClassFileDisassembler {
             },
             OP_MONITORENTER => "monitorenter".to_string(),
             OP_MONITOREXIT => "monitorexit".to_string(),
-            OP_IFNULL => format!("ifnull {}", instruction.value),
-            OP_IFNONNULL => format!("ifnonnull {}", instruction.value),
-            OP_GOTO_W => format!("goto_w {}", instruction.value),
-            OP_JSR_W => format!("jsr_w {}", instruction.value),
+            OP_IFNULL => format!("ifnull {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_IFNONNULL => format!("ifnonnull {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_GOTO_W => format!("goto_w {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
+            OP_JSR_W => format!("jsr_w {} // +{}", instruction.offset as i32 + instruction.value, instruction.value),
             OP_MULTIANEWARRAY => {
                 if let Some(class_name) = self.get_class_name(instruction.value as u16) {
                     format!("multianewarray #{}, {} // {}", instruction.value, instruction.value2, class_name)
@@ -528,6 +546,55 @@ impl ClassFileDisassembler {
                     format!("multianewarray #{}, {}", instruction.value, instruction.value2)
                 }
             },
+            OP_TABLESWITCH => {
+                let mut result = format!("tableswitch {{\n");
+                result.push_str(&format!("         default: {} // +{}\n", instruction.offset as i32 + instruction.value, instruction.value));
+                
+                for (i, (_, target)) in instruction.pairs.iter().enumerate() {
+                    let case_value = instruction.value2 + i as i32;
+                    let target_addr = instruction.offset as i32 + (*target as i32);
+                    result.push_str(&format!("         {}: {} // +{}\n", case_value, target_addr, *target as i32));
+                }
+                result.push_str("     }");
+                result
+            },
+            OP_LOOKUPSWITCH => {
+                let mut result = format!("lookupswitch {{\n");
+                result.push_str(&format!("         default: {} // +{}\n", instruction.offset as i32 + instruction.value, instruction.value));
+                
+                for (key, target) in &instruction.pairs {
+                    let target_addr = instruction.offset as i32 + (*target as i32);
+                    result.push_str(&format!("         {}: {} // +{}\n", *key as i32, target_addr, *target as i32));
+                }
+                result.push_str("     }");
+                result
+            },
+            OP_WIDE => {
+                // Wide instruction modifies the next instruction
+                // The value field contains the modified opcode and value2 contains the wide index
+                match instruction.value as u8 {
+                    OP_ILOAD => format!("wide iload {}", instruction.value2),
+                    OP_LLOAD => format!("wide lload {}", instruction.value2),
+                    OP_FLOAD => format!("wide fload {}", instruction.value2),
+                    OP_DLOAD => format!("wide dload {}", instruction.value2),
+                    OP_ALOAD => format!("wide aload {}", instruction.value2),
+                    OP_ISTORE => format!("wide istore {}", instruction.value2),
+                    OP_LSTORE => format!("wide lstore {}", instruction.value2),
+                    OP_FSTORE => format!("wide fstore {}", instruction.value2),
+                    OP_DSTORE => format!("wide dstore {}", instruction.value2),
+                    OP_ASTORE => format!("wide astore {}", instruction.value2),
+                    OP_IINC => {
+                        // For wide iinc, value2 is the index and pairs[0] contains the increment value
+                        let increment = instruction.pairs.get(0).map(|(_, v)| *v as i16).unwrap_or(0);
+                        format!("wide iinc {}, {}", instruction.value2, increment)
+                    },
+                    OP_RET => format!("wide ret {}", instruction.value2),
+                    _ => format!("wide unknown_opcode_0x{:02X} {}", instruction.value as u8, instruction.value2),
+                }
+            },
+            OP_BREAKPOINT => "breakpoint".to_string(),
+            OP_IMPDEP1 => "impdep1".to_string(),
+            OP_IMPDEP2 => "impdep2".to_string(),
             _ => format!("unknown_opcode_0x{:02X}", instruction.opcode)
         }
     }
@@ -600,6 +667,47 @@ impl ClassFileDisassembler {
             let name = self.class_file.constant_pool.get_utf8(*name_index as usize)?.clone();
             let descriptor = self.class_file.constant_pool.get_utf8(*descriptor_index as usize)?.clone();
             Some((name, descriptor))
+        } else {
+            None
+        }
+    }
+
+    fn get_constant_info(&self, index: u16) -> Option<String> {
+        if let Some(entry) = self.class_file.constant_pool.constant_pool.get((index - 1) as usize) {
+            match entry {
+                ConstantPoolEntry::Integer(i) => Some(format!("int {}", i)),
+                ConstantPoolEntry::Float(f) => Some(format!("float {}", f)),
+                ConstantPoolEntry::Long(l) => Some(format!("long {}", l)),
+                ConstantPoolEntry::Double(d) => Some(format!("double {}", d)),
+                ConstantPoolEntry::StringRef(string_index) => {
+                    if let Some(string) = self.class_file.constant_pool.get_utf8(*string_index as usize) {
+                        Some(format!("String \"{}\"", string))
+                    } else {
+                        Some(format!("String #{}",  string_index))
+                    }
+                },
+                ConstantPoolEntry::ClassRef(name_index) => {
+                    if let Some(class_name) = self.class_file.constant_pool.get_utf8(*name_index as usize) {
+                        Some(format!("Class {}", class_name))
+                    } else {
+                        Some(format!("Class #{}", name_index))
+                    }
+                },
+                ConstantPoolEntry::MethodHandleRef(kind, ref_index) => {
+                    Some(format!("MethodHandle {}:#{}", kind, ref_index))
+                },
+                ConstantPoolEntry::MethodTypeRef(descriptor_index) => {
+                    if let Some(descriptor) = self.class_file.constant_pool.get_utf8(*descriptor_index as usize) {
+                        Some(format!("MethodType {}", descriptor))
+                    } else {
+                        Some(format!("MethodType #{}", descriptor_index))
+                    }
+                },
+                ConstantPoolEntry::InvokeDynamicRef(bootstrap_method_attr_index, name_and_type_index) => {
+                    Some(format!("InvokeDynamic #{}:#{}", bootstrap_method_attr_index, name_and_type_index))
+                },
+                _ => None,
+            }
         } else {
             None
         }
