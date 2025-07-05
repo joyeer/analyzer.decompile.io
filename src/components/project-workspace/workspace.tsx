@@ -245,7 +245,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
           maxSize={50}
           className="border-r border-gray-300"
         >
-          <div className="h-full bg-white overflow-y-auto p-2">
+          <div className="h-full bg-white overflow-y-auto p-2 project-explorer">
             {/* 项目标题栏 */}
             <div className="pb-2 mb-2 border-b border-gray-200">
               <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center">
@@ -357,7 +357,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                   </div>
                 </div>
               ) : (projectType === "Java" && selectedFile && fileContent) ? (
-                <pre className="text-xs font-mono rounded overflow-x-auto whitespace-pre-wrap bg-gray-50 p-4">
+                <pre className="text-xs font-mono rounded overflow-x-auto whitespace-pre-wrap">
                   {fileContent}
                 </pre>
               ) : (projectType === "Android" && analysisResult) ? (

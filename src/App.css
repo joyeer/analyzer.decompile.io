@@ -1,5 +1,38 @@
 @import "tailwindcss";
 
+/* 滚动条样式 - Project Explorer */
+.project-explorer {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.project-explorer::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.project-explorer:hover {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cbd5e1 #f8fafc; /* Firefox */
+}
+
+.project-explorer:hover::-webkit-scrollbar {
+  display: block;
+  width: 8px; /* Chrome, Safari, Opera */
+}
+
+.project-explorer:hover::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 4px;
+}
+
+.project-explorer:hover::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.project-explorer:hover::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
 
 .logo.vite:hover {
   filter: drop-shadow(0 0 2em #747bff);
