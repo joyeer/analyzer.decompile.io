@@ -44,16 +44,16 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
     if (!projectId || !projectType) return;
     
     try {
-      // 获取项目路径
+      // Get project path
       const path = await invoke<string>("project_get_path", { projectId });
       setProjectPath(path);
       
-      // 根据项目类型加载文件列表
+      // Load file list based on project type
       if (projectType === "Java") {
         const files = await invoke<string[]>("java_project_list_files", { projectId });
         setClassFiles(files);
       } else if (projectType === "Android") {
-        // Android项目自动开始分析
+        // Android projects automatically start analysis
         analyzeAndroidProject(path);
       }
     } catch (error) {
@@ -76,7 +76,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
       setFileContent(content);
     } catch (error) {
       console.error("Failed to read file:", error);
-      setFileContent("读取文件失败");
+      setFileContent("Failed to read file");
     } finally {
       setLoading(false);
     }
@@ -96,13 +96,13 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
       setAnalysisResult(result);
     } catch (error) {
       console.error("Failed to analyze APK:", error);
-      setAnalysisResult(`分析失败: ${error}`);
+      setAnalysisResult(`Analysis failed: ${error}`);
     } finally {
       setAnalyzing(false);
     }
   };
 
-  // 切换目录展开/收起状态
+  // Toggle directory expand/collapse state
   const toggleDirectory = (dirPath: string) => {
     setExpandedDirs(prev => {
       const newSet = new Set(prev);
@@ -115,7 +115,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
     });
   };
 
-  // 构建目录树结构
+  // Build directory tree structure
   const buildDirectoryTree = (files: string[]) => {
     const tree: { [key: string]: any } = {};
     
@@ -136,7 +136,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
     return tree;
   };
 
-  // 根据文件扩展名返回对应的图标
+  // Return corresponding icon based on file extension
   const getFileIcon = (fileName: string) => {
     const extension = fileName.toLowerCase().split('.').pop();
     
@@ -168,14 +168,14 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
     }
   };
 
-  // 获取目录图标
+  // Get directory icon
   const getFolderIcon = (isExpanded: boolean) => {
     return isExpanded ? 
       <FolderOpen className="text-blue-500" size={16} /> : 
       <Folder className="text-blue-500" size={16} />;
   };
 
-  // 获取项目类型图标
+  // Get project type icon
   const getProjectTypeIcon = () => {
     switch (projectType) {
       case 'Java':
@@ -238,7 +238,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
   return (
     <div className="w-full h-screen bg-white flex flex-col">
       <PanelGroup direction="horizontal" className="flex-1">
-        {/* 左侧面板：项目结构 */}
+        {/* Left panel: Project structure */}
         <Panel 
           defaultSize={25} 
           minSize={15} 
@@ -246,7 +246,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
           className="border-r border-gray-300"
         >
           <div className="h-full bg-white overflow-y-auto p-2 project-explorer">
-            {/* 项目标题栏 */}
+            {/* Project title bar */}
             <div className="pb-2 mb-2 border-b border-gray-200">
               <h4 className="text-sm font-semibold text-gray-700 flex items-center">
                 {getProjectTypeIcon()}
@@ -256,18 +256,18 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
               </h4>
             </div>
 
-            {/* 项目文件结构 */}
+            {/* Project file structure */}
             <div className="space-y-0.5">
               {projectType === "Java" && classFiles.length > 0 ? (
                 renderTree(directoryTree)
               ) : projectType === "Android" ? (
                 <div className="space-y-2">
                   <div className="text-sm text-gray-600 p-2 bg-gray-50 rounded">
-                    <div className="font-medium mb-2">APK 组件:</div>
+                    <div className="font-medium mb-2">APK Components:</div>
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center space-x-2">
                         <Database size={12} className="text-blue-500" />
-                        <span>DEX 文件</span>
+                        <span>DEX Files</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Code size={12} className="text-orange-500" />
@@ -275,11 +275,11 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                       </div>
                       <div className="flex items-center space-x-2">
                         <Grid size={12} className="text-purple-500" />
-                        <span>资源文件 (ARSC)</span>
+                        <span>Resource Files (ARSC)</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Archive size={12} className="text-green-500" />
-                        <span>类定义和方法</span>
+                        <span>Class Definitions and Methods</span>
                       </div>
                     </div>
                   </div>
@@ -292,12 +292,12 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                       {analyzing ? (
                         <>
                           <Loader2 size={14} className="animate-spin" />
-                          <span>分析中...</span>
+                          <span>Analyzing...</span>
                         </>
                       ) : (
                         <>
                           <Play size={14} />
-                          <span>重新分析</span>
+                          <span>Re-analyze</span>
                         </>
                       )}
                     </button>
@@ -305,22 +305,22 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                 </div>
               ) : (
                 <div className="text-sm text-gray-500 text-center py-8">
-                  {projectType === "Java" ? "无文件" : "加载中..."}
+                  {projectType === "Java" ? "No files" : "Loading..."}
                 </div>
               )}
             </div>
           </div>
         </Panel>
 
-        {/* 分割线 */}
+        {/* Divider */}
         <PanelResizeHandle className="w-0.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200 cursor-col-resize flex items-center justify-center group">
           <div className="w-0.5 h-3 bg-gray-300 group-hover:bg-gray-400 transition-colors duration-200 opacity-40 group-hover:opacity-60"></div>
         </PanelResizeHandle>
 
-        {/* 右侧面板：内容显示 */}
+        {/* Right panel: Content display */}
         <Panel defaultSize={75} minSize={50}>
           <div className="h-full flex flex-col bg-white">
-            {/* 顶部标题栏 */}
+            {/* Top title bar */}
             <div className="p-3 border-b border-gray-300 bg-gray-50 flex-shrink-0">
               <h3 className="text-md font-semibold text-gray-700 flex items-center">
                 {projectType === "Java" && selectedFile ? (
@@ -333,24 +333,24 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                 ) : projectType === "Android" ? (
                   <>
                     <Smartphone className="mr-2" size={16} />
-                    APK 分析结果
+                    APK Analysis Results
                   </>
                 ) : (
                   <>
                     <File className="mr-2" size={16} />
-                    {projectType === "Java" ? "选择一个文件查看内容" : "内容"}
+                    {projectType === "Java" ? "Select a file to view content" : "Content"}
                   </>
                 )}
               </h3>
             </div>
 
-            {/* 内容区域 */}
+            {/* Content area */}
             <div className="flex-1 overflow-y-auto p-4">
               {loading || analyzing ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="text-center text-gray-500">
                     <Loader2 className="animate-spin h-6 w-6 mx-auto mb-2" />
-                    <div>{loading ? "加载中..." : "分析中..."}</div>
+                    <div>{loading ? "Loading..." : "Analyzing..."}</div>
                   </div>
                 </div>
               ) : (projectType === "Java" && selectedFile && fileContent) ? (
@@ -367,12 +367,12 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                     {projectType === "Java" ? (
                       <>
                         <Folder size={48} className="mx-auto mb-4" />
-                        <div className="text-lg">点击左侧文件查看内容</div>
+                        <div className="text-lg">Click on a file in the left panel to view content</div>
                       </>
                     ) : (
                       <>
                         <Smartphone size={48} className="mx-auto mb-4" />
-                        <div className="text-lg">点击左侧 "重新分析" 开始 APK 分析</div>
+                        <div className="text-lg">Click "Re-analyze" in the left panel to start APK analysis</div>
                       </>
                     )}
                   </div>
