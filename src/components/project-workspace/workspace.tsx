@@ -236,8 +236,8 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
   const directoryTree = buildDirectoryTree(classFiles);
 
   return (
-    <div className="w-full h-screen bg-white">
-      <PanelGroup direction="horizontal">
+    <div className="w-full h-screen bg-white flex flex-col">
+      <PanelGroup direction="horizontal" className="flex-1">
         {/* 左侧面板：项目结构 */}
         <Panel 
           defaultSize={25} 
@@ -316,8 +316,8 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
         </Panel>
 
         {/* 分割线 */}
-        <PanelResizeHandle className="w-1.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200 cursor-col-resize flex items-center justify-center group">
-          <div className="w-0.5 h-8 bg-gray-400 group-hover:bg-gray-500 transition-colors duration-200 rounded-full"></div>
+        <PanelResizeHandle className="w-0.5 bg-gray-200 hover:bg-gray-300 transition-colors duration-200 cursor-col-resize flex items-center justify-center group">
+          <div className="w-0.5 h-3 bg-gray-300 group-hover:bg-gray-400 transition-colors duration-200 opacity-40 group-hover:opacity-60"></div>
         </PanelResizeHandle>
 
         {/* 右侧面板：内容显示 */}

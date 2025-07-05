@@ -12,7 +12,7 @@
 
 .project-explorer:hover {
   scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #cbd5e1 #f8fafc; /* Firefox */
+  scrollbar-color: #e2e8f0 #f8fafc; /* Firefox - 更淡的颜色 */
 }
 
 .project-explorer:hover::-webkit-scrollbar {
@@ -21,17 +21,17 @@
 }
 
 .project-explorer:hover::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: rgba(248, 250, 252, 0.2); /* 更透明的背景 */
   border-radius: 4px;
 }
 
 .project-explorer:hover::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: rgba(226, 232, 240, 0.3); /* 更淡更透明的滑块 */
   border-radius: 4px;
 }
 
 .project-explorer:hover::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(148, 163, 184, 0.4); /* 悬停时稍微深一点但仍然淡化 */
 }
 
 .logo.vite:hover {
