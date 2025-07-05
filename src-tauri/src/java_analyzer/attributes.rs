@@ -263,10 +263,35 @@ pub struct RuntimeInvisibleAnnotations_attribute {
     pub annotations: Vec<Annotation>,
 }
 
+fn read_runtime_invisible_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeInvisibleAnnotations_attribute> {
+    let num_annotations = buffer.read_u16()?;
+    let mut annotations = Vec::new();
+    for _ in 0..num_annotations {
+        let annotation = Annotation::read(buffer)?;
+        annotations.push(annotation);
+    }
+    Ok(RuntimeInvisibleAnnotations_attribute { num_annotations, annotations })
+}
+
 #[derive(Debug)]
 pub struct RuntimeVisibleParameterAnnotations_attribute {
     pub num_parameters: u16,
     pub parameter_annotations: Vec<Vec<Annotation>>,
+}
+
+fn read_runtime_visible_parameter_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeVisibleParameterAnnotations_attribute> {
+    let num_parameters = buffer.read_u8()? as u16;
+    let mut parameter_annotations = Vec::new();
+    for _ in 0..num_parameters {
+        let num_annotations = buffer.read_u16()?;
+        let mut annotations = Vec::new();
+        for _ in 0..num_annotations {
+            let annotation = Annotation::read(buffer)?;
+            annotations.push(annotation);
+        }
+        parameter_annotations.push(annotations);
+    }
+    Ok(RuntimeVisibleParameterAnnotations_attribute { num_parameters, parameter_annotations })
 }
 
 #[derive(Debug)]
@@ -275,10 +300,35 @@ pub struct RuntimeInvisibleParameterAnnotations_attribute {
     pub parameter_annotations: Vec<Vec<Annotation>>,
 }
 
+fn read_runtime_invisible_parameter_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeInvisibleParameterAnnotations_attribute> {
+    let num_parameters = buffer.read_u8()? as u16;
+    let mut parameter_annotations = Vec::new();
+    for _ in 0..num_parameters {
+        let num_annotations = buffer.read_u16()?;
+        let mut annotations = Vec::new();
+        for _ in 0..num_annotations {
+            let annotation = Annotation::read(buffer)?;
+            annotations.push(annotation);
+        }
+        parameter_annotations.push(annotations);
+    }
+    Ok(RuntimeInvisibleParameterAnnotations_attribute { num_parameters, parameter_annotations })
+}
+
 #[derive(Debug)]    
 pub struct RuntimeVisibleTypeAnnotations_attribute {
     pub num_annotations: u16,
     pub annotations: Vec<Annotation>,
+}
+
+fn read_runtime_visible_type_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeVisibleTypeAnnotations_attribute> {
+    let num_annotations = buffer.read_u16()?;
+    let mut annotations = Vec::new();
+    for _ in 0..num_annotations {
+        let annotation = Annotation::read(buffer)?;
+        annotations.push(annotation);
+    }
+    Ok(RuntimeVisibleTypeAnnotations_attribute { num_annotations, annotations })
 }
 
 #[derive(Debug)]
@@ -287,9 +337,24 @@ pub struct RuntimeInvisibleTypeAnnotations_attribute {
     pub annotations: Vec<Annotation>,
 }
 
+fn read_runtime_invisible_type_annotations_attribute(buffer: &mut Buffer) -> Result<RuntimeInvisibleTypeAnnotations_attribute> {
+    let num_annotations = buffer.read_u16()?;
+    let mut annotations = Vec::new();
+    for _ in 0..num_annotations {
+        let annotation = Annotation::read(buffer)?;
+        annotations.push(annotation);
+    }
+    Ok(RuntimeInvisibleTypeAnnotations_attribute { num_annotations, annotations })
+}
+
 #[derive(Debug)]
 pub struct AnnotationDefault_attribute {
     pub default_value: Vec<u8>,
+}
+
+fn read_annotation_default_attribute(buffer: &mut Buffer, length: u32) -> Result<AnnotationDefault_attribute> {
+    let default_value = buffer.read_bytes(length as usize)?;
+    Ok(AnnotationDefault_attribute { default_value: default_value.to_vec() })
 }
 
 #[derive(Debug)]
@@ -303,6 +368,26 @@ pub struct BootstrapMethod {
     pub bootstrap_method_ref: u16,
     pub num_bootstrap_arguments: u16,
     pub bootstrap_arguments: Vec<u16>,
+}
+
+fn read_bootstrap_methods_attribute(buffer: &mut Buffer) -> Result<BootstrapMethods_attribute> {
+    let num_bootstrap_methods = buffer.read_u16()?;
+    let mut bootstrap_methods = Vec::new();
+    for _ in 0..num_bootstrap_methods {
+        let bootstrap_method_ref = buffer.read_u16()?;
+        let num_bootstrap_arguments = buffer.read_u16()?;
+        let mut bootstrap_arguments = Vec::new();
+        for _ in 0..num_bootstrap_arguments {
+            let arg = buffer.read_u16()?;
+            bootstrap_arguments.push(arg);
+        }
+        bootstrap_methods.push(BootstrapMethod {
+            bootstrap_method_ref,
+            num_bootstrap_arguments,
+            bootstrap_arguments,
+        });
+    }
+    Ok(BootstrapMethods_attribute { num_bootstrap_methods, bootstrap_methods })
 }
 
 #[derive(Debug)]
@@ -581,7 +666,7 @@ fn read_verification_type_info(buffer: &mut Buffer) -> Result<VerificationTypeIn
 pub(crate) fn read_raw_attribute(buffer:&mut Buffer, classfile: &ClassFile) -> Result<Attribute> {
     let attribute_name_index = buffer.read_u16()?;
     let attribute_name = classfile.constant_pool.get_utf8(attribute_name_index as usize).unwrap();
-    let _ = buffer.read_u32()?;
+    let attribute_length = buffer.read_u32()?;
     match attribute_name.as_str() {
         AttributeNames::CODE => {
             let code_attribute = read_code_attribute(buffer, classfile)?;
@@ -636,6 +721,34 @@ pub(crate) fn read_raw_attribute(buffer:&mut Buffer, classfile: &ClassFile) -> R
         }
         AttributeNames::SYNTHETIC => {
             return Ok(Attribute::SYNTHETIC(Synthetic_attribute));
+        }
+        AttributeNames::RUNTIME_INVISIBLE_ANNOTATIONS => {
+            let runtime_invisible_annotations = read_runtime_invisible_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeInvisibleAnnotations(runtime_invisible_annotations));
+        }
+        AttributeNames::RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS => {
+            let runtime_visible_parameter_annotations = read_runtime_visible_parameter_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeVisibleParameterAnnotations(runtime_visible_parameter_annotations));
+        }
+        AttributeNames::RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS => {
+            let runtime_invisible_parameter_annotations = read_runtime_invisible_parameter_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeInvisibleParameterAnnotations(runtime_invisible_parameter_annotations));
+        }
+        AttributeNames::RUNTIME_VISIBLE_TYPE_ANNOTATIONS => {
+            let runtime_visible_type_annotations = read_runtime_visible_type_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeVisibleTypeAnnotations(runtime_visible_type_annotations));
+        }
+        AttributeNames::RUNTIME_INVISIBLE_TYPE_ANNOTATIONS => {
+            let runtime_invisible_type_annotations = read_runtime_invisible_type_annotations_attribute(buffer)?;
+            return Ok(Attribute::RuntimeInvisibleTypeAnnotations(runtime_invisible_type_annotations));
+        }
+        AttributeNames::ANNOTATION_DEFAULT => {
+            let annotation_default = read_annotation_default_attribute(buffer, attribute_length)?;
+            return Ok(Attribute::AnnotationDefault(annotation_default));
+        }
+        AttributeNames::BOOTSTRAP_METHODS => {
+            let bootstrap_methods = read_bootstrap_methods_attribute(buffer)?;
+            return Ok(Attribute::BootstrapMethods(bootstrap_methods));
         }
         _ => {
             // Handle other attributes or return an error

@@ -1,6 +1,4 @@
-use std::path::Path;
-use std::collections::HashMap;
-use std::io::{Read, Seek, Cursor};
+use std::io::{Read, Cursor};
 use zip::ZipArchive;
 use crate::android_analyzer::error::{AndroidAnalyzeError, Result};
 use crate::android_analyzer::dex_analyzer::DexAnalyzer;
