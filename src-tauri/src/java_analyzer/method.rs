@@ -346,10 +346,20 @@ impl<'a> JvmCodeReader<'a> {
                 let high = self.read_i32()?;
                 
                 if high < low {
-                    return Err(JavaAnalyzeError::InvalidClassData("Invalid tableswitch: high < low".to_string()));
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Invalid tableswitch: high < low ({} < {})", high, low
+                    )));
                 }
                 
                 let count = (high - low + 1) as usize;
+                
+                // 合理性检查
+                if count > 10000 {
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Invalid tableswitch count: {} (low={}, high={}, position={})",
+                        count, low, high, self.position - 12
+                    )));
+                }
                 
                 // 检查是否有足够的字节读取所有跳转偏移量
                 if self.position + (count * 4) as u32 > self.code.len() as u32 {
@@ -386,8 +396,12 @@ impl<'a> JvmCodeReader<'a> {
                 let default_offset = self.read_i32()?;
                 let npairs = self.read_i32()?;
                 
-                if npairs < 0 {
-                    return Err(JavaAnalyzeError::InvalidClassData("Invalid lookupswitch: negative npairs".to_string()));
+                // 添加更详细的调试信息
+                if npairs < 0 || npairs > 10000 { // 合理的上限检查
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Invalid lookupswitch npairs: {} (position={}, default_offset={}, code_len={})",
+                        npairs, self.position - 8, default_offset, self.code.len()
+                    )));
                 }
                 
                 let npairs_usize = npairs as usize;
@@ -458,21 +472,37 @@ impl<'a> JvmCodeReader<'a> {
     fn align_to_4_bytes(&mut self, instruction_offset: u32) -> Result<()> {
         // tableswitch 和 lookupswitch 需要4字节对齐
         // 对齐是相对于指令开始位置的，指令开始位置 + 1（跳过opcode）后需要4字节对齐
-        let aligned_position = (instruction_offset + 1 + 3) & !3; // 向上对齐到4字节边界
+        // 计算下一个4字节对齐的位置
+        let next_aligned_pos = (instruction_offset + 4) & !3;
         
-        if aligned_position > self.position {
-            let padding = aligned_position - self.position;
-            
+        // 当前位置应该是指令开始位置 + 1（已经读取了opcode）
+        let expected_position = instruction_offset + 1;
+        
+        if self.position != expected_position {
+            return Err(JavaAnalyzeError::InvalidClassData(format!(
+                "Position mismatch: expected={}, actual={}, instruction_offset={}",
+                expected_position, self.position, instruction_offset
+            )));
+        }
+        
+        // 计算需要填充的字节数
+        let padding_needed = if next_aligned_pos > self.position {
+            next_aligned_pos - self.position
+        } else {
+            0
+        };
+        
+        if padding_needed > 0 {
             // 检查是否有足够的字节来读取填充
-            if self.position + padding > self.code.len() as u32 {
+            if self.position + padding_needed > self.code.len() as u32 {
                 return Err(JavaAnalyzeError::InvalidClassData(format!(
-                    "Not enough bytes for alignment padding: position={}, padding={}, code_len={}",
-                    self.position, padding, self.code.len()
+                    "Not enough bytes for alignment padding: position={}, padding={}, target={}, code_len={}",
+                    self.position, padding_needed, next_aligned_pos, self.code.len()
                 )));
             }
             
             // 跳过填充字节
-            for _ in 0..padding {
+            for _ in 0..padding_needed {
                 self.read_u8()?;
             }
         }
