@@ -61,6 +61,14 @@ impl<'a> JvmCodeReader<'a> {
     pub fn read(&mut self) -> Result<Vec<Instruction>> {
         let mut opcodes = vec![];
         while self.position < self.code.len() as u32 {
+            // 添加边界检查
+            if self.position >= self.code.len() as u32 {
+                return Err(JavaAnalyzeError::InvalidClassData(format!(
+                    "Bytecode position {} exceeds code length {}",
+                    self.position, self.code.len()
+                )));
+            }
+            
             let opcode = self.decode()?;
             opcodes.push(opcode);
         }
@@ -325,6 +333,14 @@ impl<'a> JvmCodeReader<'a> {
                 // tableswitch 指令需要4字节对齐
                 self.align_to_4_bytes(offset)?;
                 
+                // 确保有足够的字节读取基本参数
+                if self.position + 12 > self.code.len() as u32 {
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Not enough bytes for tableswitch basic parameters: position={}, code_len={}",
+                        self.position, self.code.len()
+                    )));
+                }
+                
                 let default_offset = self.read_i32()?;
                 let low = self.read_i32()?;
                 let high = self.read_i32()?;
@@ -334,6 +350,15 @@ impl<'a> JvmCodeReader<'a> {
                 }
                 
                 let count = (high - low + 1) as usize;
+                
+                // 检查是否有足够的字节读取所有跳转偏移量
+                if self.position + (count * 4) as u32 > self.code.len() as u32 {
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Not enough bytes for tableswitch jump offsets: position={}, count={}, code_len={}",
+                        self.position, count, self.code.len()
+                    )));
+                }
+                
                 let mut jump_offsets = Vec::with_capacity(count);
                 
                 for _ in 0..count {
@@ -350,6 +375,14 @@ impl<'a> JvmCodeReader<'a> {
                 // lookupswitch 指令需要4字节对齐
                 self.align_to_4_bytes(offset)?;
                 
+                // 确保有足够的字节读取基本参数
+                if self.position + 8 > self.code.len() as u32 {
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Not enough bytes for lookupswitch basic parameters: position={}, code_len={}",
+                        self.position, self.code.len()
+                    )));
+                }
+                
                 let default_offset = self.read_i32()?;
                 let npairs = self.read_i32()?;
                 
@@ -357,7 +390,17 @@ impl<'a> JvmCodeReader<'a> {
                     return Err(JavaAnalyzeError::InvalidClassData("Invalid lookupswitch: negative npairs".to_string()));
                 }
                 
-                let mut pairs = Vec::with_capacity(npairs as usize);
+                let npairs_usize = npairs as usize;
+                
+                // 检查是否有足够的字节读取所有匹配对
+                if self.position + (npairs_usize * 8) as u32 > self.code.len() as u32 {
+                    return Err(JavaAnalyzeError::InvalidClassData(format!(
+                        "Not enough bytes for lookupswitch match pairs: position={}, npairs={}, code_len={}",
+                        self.position, npairs_usize, self.code.len()
+                    )));
+                }
+                
+                let mut pairs = Vec::with_capacity(npairs_usize);
                 
                 for _ in 0..npairs {
                     let match_value = self.read_i32()?;
@@ -399,7 +442,10 @@ impl<'a> JvmCodeReader<'a> {
     
     fn read_u8(&mut self) -> Result<u8> {
         let byte = self.code.get(self.position as usize)
-            .ok_or(JavaAnalyzeError::InvalidClassData(format!("Invalid bytecode data postion: {0}", self.position)))?;
+            .ok_or(JavaAnalyzeError::InvalidClassData(format!(
+                "Invalid bytecode data position: {} (code length: {})", 
+                self.position, self.code.len()
+            )))?;
         self.position += 1;
         Ok(*byte)
     }
@@ -411,12 +457,24 @@ impl<'a> JvmCodeReader<'a> {
 
     fn align_to_4_bytes(&mut self, instruction_offset: u32) -> Result<()> {
         // tableswitch 和 lookupswitch 需要4字节对齐
-        // 对齐是相对于指令开始位置的
-        let current_relative_pos = self.position - instruction_offset - 1; // -1 因为已经读取了opcode
-        let padding = (4 - (current_relative_pos % 4)) % 4;
+        // 对齐是相对于指令开始位置的，指令开始位置 + 1（跳过opcode）后需要4字节对齐
+        let aligned_position = (instruction_offset + 1 + 3) & !3; // 向上对齐到4字节边界
         
-        for _ in 0..padding {
-            self.read_u8()?; // 跳过填充字节
+        if aligned_position > self.position {
+            let padding = aligned_position - self.position;
+            
+            // 检查是否有足够的字节来读取填充
+            if self.position + padding > self.code.len() as u32 {
+                return Err(JavaAnalyzeError::InvalidClassData(format!(
+                    "Not enough bytes for alignment padding: position={}, padding={}, code_len={}",
+                    self.position, padding, self.code.len()
+                )));
+            }
+            
+            // 跳过填充字节
+            for _ in 0..padding {
+                self.read_u8()?;
+            }
         }
         
         Ok(())
