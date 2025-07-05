@@ -154,8 +154,8 @@ impl<'a> JvmCodeReader<'a> {
             OP_FSUB => Ok(Instruction::new(opcode, offset)),
             OP_GETFIELD => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
             OP_GETSTATIC => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_GOTO => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_GOTO_W => Ok(Instruction::new2(opcode, offset, self.read_u32()? as i32)),
+            OP_GOTO => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_GOTO_W => Ok(Instruction::new2(opcode, offset, self.read_i32()? as i32)),
             OP_I2B => Ok(Instruction::new(opcode, offset)),
             OP_I2C => Ok(Instruction::new(opcode, offset)),
             OP_I2D => Ok(Instruction::new(opcode, offset)),
@@ -177,25 +177,25 @@ impl<'a> JvmCodeReader<'a> {
             OP_LDIV => Ok(Instruction::new(opcode, offset)),
             OP_FDIV => Ok(Instruction::new(opcode, offset)),
             OP_DDIV => Ok(Instruction::new(opcode, offset)),
-            OP_IF_ACMPEQ => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ACMPNE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPEQ => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPNE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPLT => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPGE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPGT => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IF_ICMPLE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFEQ => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFNE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFLT => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFGE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFGT => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFLE => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFNULL => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_IFNONNULL => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
+            OP_IF_ACMPEQ => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ACMPNE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPEQ => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPNE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPLT => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPGE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPGT => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IF_ICMPLE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFEQ => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFNE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFLT => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFGE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFGT => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFLE => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFNULL => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_IFNONNULL => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
             OP_IINC => {
                 let index = self.read_u8()?;
-                let increment = self.read_u8()?;
+                let increment = self.read_i8()?;
                 Ok(Instruction::new3(opcode, offset, index as i32, increment as i32))
             }
             OP_ILOAD => Ok(Instruction::new2(opcode, offset, self.read_u8()? as i32)),
@@ -206,8 +206,18 @@ impl<'a> JvmCodeReader<'a> {
             OP_IMUL => Ok(Instruction::new(opcode, offset)),
             OP_INEG => Ok(Instruction::new(opcode, offset)),
             OP_INSTANCEOF => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_INVOKEDYNAMIC => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_INVOKEINTERFACE => Ok(Instruction::new3(opcode, offset, self.read_u16()? as i32, self.read_u8()? as i32)),
+            OP_INVOKEDYNAMIC => {
+                let bootstrap_method_index = self.read_u16()?;
+                let _zero1 = self.read_u8()?; // 必须为0
+                let _zero2 = self.read_u8()?; // 必须为0
+                Ok(Instruction::new2(opcode, offset, bootstrap_method_index as i32))
+            }
+            OP_INVOKEINTERFACE => {
+                let method_ref_index = self.read_u16()?;
+                let count = self.read_u8()?;
+                let _zero = self.read_u8()?; // 必须为0
+                Ok(Instruction::new3(opcode, offset, method_ref_index as i32, count as i32))
+            }
             OP_INVOKESPECIAL => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
             OP_INVOKESTATIC => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
             OP_INVOKEVIRTUAL => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
@@ -224,8 +234,8 @@ impl<'a> JvmCodeReader<'a> {
             OP_ISUB => Ok(Instruction::new(opcode, offset)),
             OP_IUSHR => Ok(Instruction::new(opcode, offset)),
             OP_IXOR => Ok(Instruction::new(opcode, offset)),
-            OP_JSR => Ok(Instruction::new2(opcode, offset, self.read_u16()? as i32)),
-            OP_JSR_W => Ok(Instruction::new2(opcode, offset, self.read_u32()? as i32)),
+            OP_JSR => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
+            OP_JSR_W => Ok(Instruction::new2(opcode, offset, self.read_i32()? as i32)),
             OP_L2D => Ok(Instruction::new(opcode, offset)),
             OP_L2F => Ok(Instruction::new(opcode, offset)),
             OP_L2I => Ok(Instruction::new(opcode, offset)),
@@ -291,6 +301,26 @@ impl<'a> JvmCodeReader<'a> {
             OP_SASTORE => Ok(Instruction::new(opcode, offset)),
             OP_SIPUSH => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
             OP_SWAP => Ok(Instruction::new(opcode, offset)),
+            OP_WIDE => {
+                // WIDE指令扩展下一个指令的操作数从1字节到2字节
+                let wide_opcode = self.read_u8()?;
+                match wide_opcode {
+                    OP_ILOAD | OP_FLOAD | OP_ALOAD | OP_LLOAD | OP_DLOAD |
+                    OP_ISTORE | OP_FSTORE | OP_ASTORE | OP_LSTORE | OP_DSTORE |
+                    OP_RET => {
+                        let index = self.read_u16()?;
+                        Ok(Instruction::new3(opcode, offset, wide_opcode as i32, index as i32))
+                    }
+                    OP_IINC => {
+                        let index = self.read_u16()?;
+                        let increment = self.read_i16()?;
+                        let mut instruction = Instruction::new3(opcode, offset, wide_opcode as i32, index as i32);
+                        instruction.pairs = vec![(increment as u16, 0)]; // 使用pairs存储increment
+                        Ok(instruction)
+                    }
+                    _ => Err(JavaAnalyzeError::InvalidClassData(format!("Invalid wide opcode: {wide_opcode}")))
+                }
+            }
             OP_TABLESWITCH => {
                 // tableswitch 指令需要4字节对齐
                 self.align_to_4_bytes(offset)?;
@@ -312,7 +342,7 @@ impl<'a> JvmCodeReader<'a> {
                 
                 let mut instruction = Instruction::new3(opcode, offset, default_offset, low);
                 instruction.pairs = jump_offsets.into_iter().enumerate()
-                    .map(|(i, offset)| ((low + i as i32) as u16, offset as u16))
+                    .map(|(i, offset)| ((low + i as i32) as u16, (offset & 0xFFFF) as u16))
                     .collect();
                 Ok(instruction)
             }
@@ -332,7 +362,7 @@ impl<'a> JvmCodeReader<'a> {
                 for _ in 0..npairs {
                     let match_value = self.read_i32()?;
                     let jump_offset = self.read_i32()?;
-                    pairs.push((match_value as u16, jump_offset as u16));
+                    pairs.push(((match_value & 0xFFFF) as u16, (jump_offset & 0xFFFF) as u16));
                 }
                 
                 let mut instruction = Instruction::new3(opcode, offset, default_offset, npairs);
@@ -359,12 +389,12 @@ impl<'a> JvmCodeReader<'a> {
 
     fn read_i16(&mut self, ) -> Result<i16> {
         let value = self.read_u16()?;
-        Ok(unsafe { std::mem::transmute::<u16, i16>(value) })
+        Ok(i16::from_be_bytes(value.to_be_bytes()))
     }
     
     fn read_i8(&mut self, ) -> Result<i8> {
         let value = self.read_u8()?;
-        Ok(unsafe { std::mem::transmute::<u8, i8>(value) })
+        Ok(i8::from_be_bytes([value]))
     }
     
     fn read_u8(&mut self) -> Result<u8> {
@@ -376,7 +406,7 @@ impl<'a> JvmCodeReader<'a> {
 
     fn read_i32(&mut self) -> Result<i32> {
         let value = self.read_u32()?;
-        Ok(unsafe { std::mem::transmute::<u32, i32>(value) })
+        Ok(i32::from_be_bytes(value.to_be_bytes()))
     }
 
     fn align_to_4_bytes(&mut self, instruction_offset: u32) -> Result<()> {
