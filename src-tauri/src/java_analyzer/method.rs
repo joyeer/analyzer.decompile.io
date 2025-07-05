@@ -291,6 +291,54 @@ impl<'a> JvmCodeReader<'a> {
             OP_SASTORE => Ok(Instruction::new(opcode, offset)),
             OP_SIPUSH => Ok(Instruction::new2(opcode, offset, self.read_i16()? as i32)),
             OP_SWAP => Ok(Instruction::new(opcode, offset)),
+            OP_TABLESWITCH => {
+                // tableswitch 指令需要4字节对齐
+                self.align_to_4_bytes(offset)?;
+                
+                let default_offset = self.read_i32()?;
+                let low = self.read_i32()?;
+                let high = self.read_i32()?;
+                
+                if high < low {
+                    return Err(JavaAnalyzeError::InvalidClassData("Invalid tableswitch: high < low".to_string()));
+                }
+                
+                let count = (high - low + 1) as usize;
+                let mut jump_offsets = Vec::with_capacity(count);
+                
+                for _ in 0..count {
+                    jump_offsets.push(self.read_i32()?);
+                }
+                
+                let mut instruction = Instruction::new3(opcode, offset, default_offset, low);
+                instruction.pairs = jump_offsets.into_iter().enumerate()
+                    .map(|(i, offset)| ((low + i as i32) as u16, offset as u16))
+                    .collect();
+                Ok(instruction)
+            }
+            OP_LOOKUPSWITCH => {
+                // lookupswitch 指令需要4字节对齐
+                self.align_to_4_bytes(offset)?;
+                
+                let default_offset = self.read_i32()?;
+                let npairs = self.read_i32()?;
+                
+                if npairs < 0 {
+                    return Err(JavaAnalyzeError::InvalidClassData("Invalid lookupswitch: negative npairs".to_string()));
+                }
+                
+                let mut pairs = Vec::with_capacity(npairs as usize);
+                
+                for _ in 0..npairs {
+                    let match_value = self.read_i32()?;
+                    let jump_offset = self.read_i32()?;
+                    pairs.push((match_value as u16, jump_offset as u16));
+                }
+                
+                let mut instruction = Instruction::new3(opcode, offset, default_offset, npairs);
+                instruction.pairs = pairs;
+                Ok(instruction)
+            }
             _ => Err(JavaAnalyzeError::InvalidClassData(format!("Invalid opcode: {opcode}")))
         }
     }
@@ -324,5 +372,23 @@ impl<'a> JvmCodeReader<'a> {
             .ok_or(JavaAnalyzeError::InvalidClassData(format!("Invalid bytecode data postion: {0}", self.position)))?;
         self.position += 1;
         Ok(*byte)
+    }
+
+    fn read_i32(&mut self) -> Result<i32> {
+        let value = self.read_u32()?;
+        Ok(unsafe { std::mem::transmute::<u32, i32>(value) })
+    }
+
+    fn align_to_4_bytes(&mut self, instruction_offset: u32) -> Result<()> {
+        // tableswitch 和 lookupswitch 需要4字节对齐
+        // 对齐是相对于指令开始位置的
+        let current_relative_pos = self.position - instruction_offset - 1; // -1 因为已经读取了opcode
+        let padding = (4 - (current_relative_pos % 4)) % 4;
+        
+        for _ in 0..padding {
+            self.read_u8()?; // 跳过填充字节
+        }
+        
+        Ok(())
     }
 }
