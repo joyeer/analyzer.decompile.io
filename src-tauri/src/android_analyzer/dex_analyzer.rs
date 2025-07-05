@@ -287,7 +287,7 @@ impl<R: Read + Seek> DexAnalyzer<R> {
     }
 
     /// Read class definitions
-    fn read_class_definitions(&mut self, header: &DexHeader, strings: &[String], types: &[TypeDescriptor], fields: &[FieldDescriptor], methods: &[MethodDescriptor]) -> Result<Vec<ClassDef>> {
+    fn read_class_definitions(&mut self, header: &DexHeader, strings: &[String], types: &[TypeDescriptor], _fields: &[FieldDescriptor], _methods: &[MethodDescriptor]) -> Result<Vec<ClassDef>> {
         let mut classes = Vec::new();
         
         self.reader.seek(header.class_defs_offset as u64)?;
@@ -296,11 +296,11 @@ impl<R: Read + Seek> DexAnalyzer<R> {
             let class_idx = self.reader.read_u32()?;
             let access_flags = self.reader.read_u32()?;
             let superclass_idx = self.reader.read_u32()?;
-            let interfaces_off = self.reader.read_u32()?;
+            let _interfaces_off = self.reader.read_u32()?;
             let source_file_idx = self.reader.read_u32()?;
-            let annotations_off = self.reader.read_u32()?;
-            let class_data_off = self.reader.read_u32()?;
-            let static_values_off = self.reader.read_u32()?;
+            let _annotations_off = self.reader.read_u32()?;
+            let _class_data_off = self.reader.read_u32()?;
+            let _static_values_off = self.reader.read_u32()?;
             
             if class_idx as usize >= types.len() {
                 return Err(AndroidAnalyzeError::InvalidDexFile("Invalid class type index".to_string()));

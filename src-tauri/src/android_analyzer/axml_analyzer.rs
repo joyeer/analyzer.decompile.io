@@ -2,7 +2,7 @@ use std::io::{Read, Seek};
 use std::collections::HashMap;
 use crate::android_analyzer::error::{AndroidAnalyzeError, Result};
 use crate::android_analyzer::dex_reader::DexReader;
-use crate::android::{AndroidManifest, Activity, Service, Receiver, Provider, Permission};
+use crate::android::AndroidManifest;
 
 /// AXML (Android XML) analyzer for parsing binary XML files
 pub struct AXMLAnalyzer<R: Read + Seek> {

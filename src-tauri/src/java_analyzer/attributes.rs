@@ -40,7 +40,7 @@ impl AttributeNames {
 
 #[derive(Debug)]
 pub enum Attribute {
-    ConstantValue(ConstantValue_attribute),
+    ConstantValue(ConstantValueAttribute),
     Code(Code_attribute),
     StackMapTable(StackMapTable_attribute),
     LineNumberTable(LineNumberTable_attribute),
@@ -64,13 +64,13 @@ pub enum Attribute {
 }
 
 #[derive(Debug)]
-pub struct ConstantValue_attribute {
+pub struct ConstantValueAttribute {
     pub constant_value_index: u16,
 }
 
-pub fn read_constant_value_attribute(buffer: &mut Buffer) -> Result<ConstantValue_attribute> {
+pub fn read_constant_value_attribute(buffer: &mut Buffer) -> Result<ConstantValueAttribute> {
     let constant_value_index = buffer.read_u16()?;
-    Ok(ConstantValue_attribute { constant_value_index })
+    Ok(ConstantValueAttribute { constant_value_index })
 }
 
 #[derive(Debug)]

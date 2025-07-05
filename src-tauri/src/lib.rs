@@ -23,6 +23,8 @@ pub fn run() {
             java::java_project_list_files,
             java::java_project_read_file_content,
             android::android_analyze_apk,
+            android::android_project_list_files,
+            android::android_project_read_file_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

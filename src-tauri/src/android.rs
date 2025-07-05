@@ -431,3 +431,59 @@ pub fn android_analyze_apk(apk_path: String) -> Result<String, String> {
         Err(e) => Err(e.to_string())
     }
 }
+
+/// List all files in an Android APK project
+#[tauri::command]
+pub fn android_project_list_files(project_id: String) -> Result<Vec<String>, String> {
+    use crate::project::PROJECTS;
+    
+    let projects = PROJECTS.lock().unwrap();
+    let project = projects.get(&project_id)
+        .ok_or_else(|| "Project not found".to_string())?;
+        
+    let mut analyzer = ApkAnalyzer::new(project.path.clone());
+    // First analyze to open the APK
+    analyzer.analyze().map_err(|e| e.to_string())?;
+    
+    // Then list files
+    analyzer.list_files().map_err(|e| e.to_string())
+}
+
+/// Read file content from an Android APK project
+#[tauri::command]
+pub fn android_project_read_file_content(project_id: String, file_name: String) -> Result<String, String> {
+    use crate::project::PROJECTS;
+    
+    let projects = PROJECTS.lock().unwrap();
+    let project = projects.get(&project_id)
+        .ok_or_else(|| "Project not found".to_string())?;
+        
+    let mut analyzer = ApkAnalyzer::new(project.path.clone());
+    // First analyze to open the APK
+    analyzer.analyze().map_err(|e| e.to_string())?;
+    
+    // Then read file content
+    let content = analyzer.get_file_content(&file_name).map_err(|e| e.to_string())?;
+    
+    // Try to convert to string, or show hex for binary files
+    match String::from_utf8(content.clone()) {
+        Ok(text) => Ok(text),
+        Err(_) => {
+            // If it's not valid UTF-8, show as hex dump
+            let hex_lines: Vec<String> = content.chunks(16)
+                .enumerate()
+                .map(|(i, chunk)| {
+                    let hex: String = chunk.iter()
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<Vec<_>>()
+                        .join(" ");
+                    let ascii: String = chunk.iter()
+                        .map(|&b| if b.is_ascii_graphic() || b == b' ' { b as char } else { '.' })
+                        .collect();
+                    format!("{:08x}  {:<47} |{}|", i * 16, hex, ascii)
+                })
+                .collect();
+            Ok(format!("Binary file (hex dump):\n{}", hex_lines.join("\n")))
+        }
+    }
+}

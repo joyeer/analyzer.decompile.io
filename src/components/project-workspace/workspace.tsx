@@ -53,7 +53,10 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
         const files = await invoke<string[]>("java_project_list_files", { projectId });
         setClassFiles(files);
       } else if (projectType === "Android") {
-        // Android projects automatically start analysis
+        // Load APK file structure
+        const files = await invoke<string[]>("android_project_list_files", { projectId });
+        setClassFiles(files);
+        // Also start analysis
         analyzeAndroidProject(path);
       }
     } catch (error) {
@@ -62,17 +65,27 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
   };
 
   const handleFileClick = async (fileName: string) => {
-    if (!projectId || projectType !== "Java") return;
+    if (!projectId) return;
     
     setSelectedFile(fileName);
     setLoading(true);
     setFileContent("");
     
     try {
-      const content = await invoke<string>("java_project_read_file_content", { 
-        projectId, 
-        fileName 
-      });
+      let content: string;
+      if (projectType === "Java") {
+        content = await invoke<string>("java_project_read_file_content", { 
+          projectId, 
+          fileName 
+        });
+      } else if (projectType === "Android") {
+        content = await invoke<string>("android_project_read_file_content", { 
+          projectId, 
+          fileName 
+        });
+      } else {
+        content = "Unsupported project type";
+      }
       setFileContent(content);
     } catch (error) {
       console.error("Failed to read file:", error);
@@ -258,7 +271,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
 
             {/* Project file structure */}
             <div className="space-y-0.5">
-              {projectType === "Java" && classFiles.length > 0 ? (
+              {(projectType === "Java" || projectType === "Android") && classFiles.length > 0 ? (
                 renderTree(directoryTree)
               ) : projectType === "Android" ? (
                 <div className="space-y-2">
@@ -305,7 +318,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                 </div>
               ) : (
                 <div className="text-sm text-gray-500 text-center py-8">
-                  {projectType === "Java" ? "No files" : "Loading..."}
+                  {(projectType === "Java" || projectType === "Android") ? "No files" : "Loading..."}
                 </div>
               )}
             </div>
@@ -323,14 +336,14 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
             {/* Top title bar */}
             <div className="p-3 border-b border-gray-300 bg-gray-50 flex-shrink-0">
               <h3 className="text-md font-semibold text-gray-700 flex items-center">
-                {projectType === "Java" && selectedFile ? (
+                {(projectType === "Java" || projectType === "Android") && selectedFile ? (
                   <>
                     <span className="mr-2">
                       {getFileIcon(selectedFile.split('/').pop() || '')}
                     </span>
                     {selectedFile}
                   </>
-                ) : projectType === "Android" ? (
+                ) : projectType === "Android" && !selectedFile ? (
                   <>
                     <Smartphone className="mr-2" size={16} />
                     APK Analysis Results
@@ -338,7 +351,7 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                 ) : (
                   <>
                     <File className="mr-2" size={16} />
-                    {projectType === "Java" ? "Select a file to view content" : "Content"}
+                    {(projectType === "Java" || projectType === "Android") ? "Select a file to view content" : "Content"}
                   </>
                 )}
               </h3>
@@ -353,18 +366,18 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
                     <div>{loading ? "Loading..." : "Analyzing..."}</div>
                   </div>
                 </div>
-              ) : (projectType === "Java" && selectedFile && fileContent) ? (
+              ) : ((projectType === "Java" || projectType === "Android") && selectedFile && fileContent) ? (
                 <pre className="text-xs font-mono rounded overflow-x-auto whitespace-pre-wrap">
                   {fileContent}
                 </pre>
-              ) : (projectType === "Android" && analysisResult) ? (
+              ) : (projectType === "Android" && !selectedFile && analysisResult) ? (
                 <pre className="text-xs font-mono rounded overflow-x-auto whitespace-pre-wrap bg-gray-50 p-4">
                   {analysisResult}
                 </pre>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center text-gray-400">
-                    {projectType === "Java" ? (
+                    {(projectType === "Java" || projectType === "Android") ? (
                       <>
                         <Folder size={48} className="mx-auto mb-4" />
                         <div className="text-lg">Click on a file in the left panel to view content</div>
