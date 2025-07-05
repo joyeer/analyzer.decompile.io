@@ -74,10 +74,6 @@ impl<'a> Buffer<'a> {
     pub fn has_more_data(&self) -> bool {
         self.position < self.buffer.len()
     }
-
-    pub fn remaining_bytes(&self) -> usize {
-        self.buffer.len() - self.position
-    }
 }
 
 

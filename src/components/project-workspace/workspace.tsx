@@ -248,15 +248,12 @@ export default function ProjectWorkspace({ projectId, projectType }: ProjectWork
           <div className="h-full bg-white overflow-y-auto p-2 project-explorer">
             {/* 项目标题栏 */}
             <div className="pb-2 mb-2 border-b border-gray-200">
-              <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center">
                 {getProjectTypeIcon()}
-                <span className="ml-1">{projectType} Project</span>
+                <span className="ml-2 truncate" title={projectPath}>
+                  {projectPath ? projectPath.split('/').pop() : 'Project'}
+                </span>
               </h4>
-              {projectPath && (
-                <div className="text-xs text-gray-500 mt-1 truncate" title={projectPath}>
-                  {projectPath.split('/').pop()}
-                </div>
-              )}
             </div>
 
             {/* 项目文件结构 */}

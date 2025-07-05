@@ -6,11 +6,7 @@ use crate::java_analyzer::io::Buffer;
 #[derive(Debug)]
 pub struct JvmField {
     pub access_flags: u16,
-    pub name_index: u16,
-    pub descriptor_index: u16,
-    pub attributes_count: u16,
     pub attributes: Vec<Attribute>,
-
     pub name: String,
     pub descriptor: String,
 }
@@ -31,9 +27,6 @@ pub fn read_jvm_field(buffer: &mut Buffer, class_file: &ClassFile) -> Result<Jvm
 
     Ok(JvmField {
         access_flags,
-        name_index,
-        descriptor_index,
-        attributes_count,
         attributes,
         name: name.to_string(),
         descriptor: descriptor.to_string(),
